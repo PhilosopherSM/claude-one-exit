@@ -1,0 +1,18 @@
+port: 7890
+bind-address: 172.29.61.2
+allow-lan: true
+ipv6: false
+mode: rule
+log-level: warning
+dns:
+  enable: false
+proxies:
+  # Replace this entry with one verified TCP-capable node, keeping its name.
+  - name: UPSTREAM
+    type: socks5
+    server: 192.0.2.10
+    port: 1080
+    udp: false
+rules:
+  - DOMAIN-SUFFIX,tailscale.com,UPSTREAM
+  - MATCH,REJECT

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Files (Docker)
+Comment=Browse the Claude container filesystem
+Exec=/usr/bin/bash /mnt/c/src/wslg-docker-workbench/gnome-wslg/Open-Docker-App.sh files
+Icon=system-file-manager
+Terminal=false
+Categories=System;FileManager;

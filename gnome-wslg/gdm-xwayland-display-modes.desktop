@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Register WSLg fullscreen display modes
+OnlyShowIn=GNOME;
+Exec=/usr/bin/bash /mnt/c/src/wslg-docker-workbench/gnome-wslg/Register-Gdm-Display-Modes.sh
+NoDisplay=true

@@ -1,0 +1,8 @@
+[Unit]
+Description=Prepare Ubuntu X11 sockets for the WSLg desktop
+After=wslg.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/libexec/wslg-x11-directory
+RemainAfterExit=yes

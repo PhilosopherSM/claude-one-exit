@@ -1,0 +1,24 @@
+name: hk-desktop-pilot
+
+services:
+  desktop:
+    build: .
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:./seccomp_profile.json
+    init: true
+    shm_size: 256m
+    command: [dbus-run-session, --, claude-desktop, --ozone-platform=wayland, --disable-setuid-sandbox]
+    environment:
+      XDG_SESSION_TYPE: wayland
+      XDG_RUNTIME_DIR: /run/desktop
+      WAYLAND_DISPLAY: /display/wayland-0
+    volumes:
+      - type: bind
+        source: /mnt/wslg/runtime-dir/wayland-0
+        target: /display/wayland-0
+        read_only: true
+        bind:
+          create_host_path: false

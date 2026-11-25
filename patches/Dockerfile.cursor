@@ -1,0 +1,157 @@
+# Create a builder image with the compilers, etc. needed
+FROM mcr.microsoft.com/cbl-mariner/base/core:2.0.20250701 AS build-env
+COPY builder-ca.pem /tmp/builder-ca.pem
+RUN sed -i "/^sslverify=1/a sslcacert=/tmp/builder-ca.pem" /etc/yum.repos.d/*.repo
+
+# Install all the required packages for building. This list is probably
+# longer than necessary.
+RUN echo "== Install Git/CA certificates ==" && \
+    tdnf install -y \
+        git \
+        ca-certificates
+
+RUN echo "== Install Core dependencies ==" && \
+    tdnf install -y \
+        alsa-lib \
+        alsa-lib-devel  \
+        autoconf  \
+        automake  \
+        binutils  \
+        bison  \
+        build-essential  \
+        cairo \
+        cairo-devel \
+        clang  \
+        clang-devel  \
+        cmake  \
+        dbus  \
+        dbus-devel  \
+        dbus-glib  \
+        dbus-glib-devel  \
+        diffutils  \
+        elfutils-devel  \
+        file-libs  \
+        flex  \
+        fontconfig-devel  \
+        gawk  \
+        gcc  \
+        gettext  \
+        glibc-devel  \
+        glib-schemas \
+        gobject-introspection  \
+        gobject-introspection-devel  \
+        harfbuzz  \
+        harfbuzz-devel  \
+        kernel-headers  \
+        intltool \
+        libatomic_ops  \
+        libcap-devel  \
+        libffi  \
+        libffi-devel  \
+        libgudev  \
+        libgudev-devel  \
+        libjpeg-turbo  \
+        libjpeg-turbo-devel  \
+        libltdl  \
+        libltdl-devel  \
+        libpng-devel  \
+        librsvg2-devel \
+        libtiff  \
+        libtiff-devel  \
+        libusb  \
+        libusb-devel  \
+        libwebp  \
+        libwebp-devel  \
+        libxml2 \
+        libxml2-devel  \
+        make  \
+        meson  \
+        newt  \
+        nss  \
+        nss-libs  \
+        openldap  \
+        openssl-devel  \
+        pam-devel  \
+        pango  \
+        pango-devel  \
+        patch  \
+        perl-XML-Parser \
+        polkit-devel  \
+        python3-devel \
+        python3-mako  \
+        python3-markupsafe \
+        sed \
+        sqlite-devel \
+        systemd-devel  \
+        tar \
+        unzip  \
+        vala  \
+        vala-devel  \
+        vala-tools  \
+        zlib-devel
+
+RUN echo "== Install UI dependencies ==" && \
+    tdnf    install -y \
+            libdrm-devel \
+            libepoxy-devel \
+            libevdev \
+            libevdev-devel \
+            libinput \
+            libinput-devel \
+            libpciaccess-devel \
+            libSM-devel \
+            libsndfile \
+            libsndfile-devel \
+            libXcursor \
+            libXcursor-devel \
+            libXdamage-devel \
+            libXfont2-devel \
+            libXi \
+            libXi-devel \
+            libxkbcommon-devel \
+            libxkbfile-devel \
+            libXrandr-devel \
+            libxshmfence-devel \
+            libXtst \
+            libXtst-devel \
+            libXxf86vm-devel \
+            wayland-devel \
+            wayland-protocols-devel \
+            xkbcomp \
+            xkeyboard-config \
+            xorg-x11-server-devel \
+            xorg-x11-util-macros
+
+# Create an image with builds of FreeRDP and Weston
+COPY layer/usr/ /usr/
+COPY src /work/weston
+WORKDIR /work/weston
+ENV PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/lib64/pkgconfig
+RUN /usr/bin/meson --prefix=/usr build \
+        --buildtype=release \
+        -Dbackend-default=rdp \
+        -Dbackend-drm=false \
+        -Dbackend-drm-screencast-vaapi=false \
+        -Dbackend-headless=false \
+        -Dbackend-wayland=false \
+        -Dbackend-x11=false \
+        -Dbackend-fbdev=false \
+        -Dcolor-management-colord=false \
+        -Dscreenshare=false \
+        -Dsystemd=false \
+        -Dwslgd=true \
+        -Dremoting=false \
+        -Dpipewire=false \
+        -Dshell-fullscreen=false \
+        -Dcolor-management-lcms=false \
+        -Dshell-ivi=false \
+        -Dshell-kiosk=false \
+        -Ddemo-clients=false \
+        -Dsimple-clients=[] \
+        -Dtools=[] \
+        -Dresize-pool=false \
+        -Dwcap-decode=false \
+        -Dtest-junit-xml=false && \
+    ninja -C build -j4 libweston/backend-rdp/rdp-backend.so
+FROM scratch AS artifact
+COPY --from=build-env /work/weston/build/libweston/backend-rdp/rdp-backend.so /rdp-backend.so

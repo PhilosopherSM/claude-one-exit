@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+
+if findmnt --mountpoint /tmp/.X11-unix >/dev/null; then
+    umount -- /tmp/.X11-unix
+fi
+test ! -L /tmp/.X11-unix
+install -d -m 1777 -o root -g root /tmp/.X11-unix
+if [ ! -e /tmp/.X11-unix/X0 ] && [ ! -L /tmp/.X11-unix/X0 ]; then
+    ln -s /mnt/wslg/.X11-unix/X0 /tmp/.X11-unix/X0
+fi
+test "$(readlink /tmp/.X11-unix/X0)" = /mnt/wslg/.X11-unix/X0

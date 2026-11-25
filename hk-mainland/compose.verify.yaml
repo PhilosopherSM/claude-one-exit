@@ -1,0 +1,19 @@
+services:
+  mihomo:
+    networks:
+      wan:
+        ipv4_address: 172.29.62.3
+  fixture:
+    image: metacubex/mihomo:v1.19.34@sha256:4c2495d705f152897a58eac410350f243835fd01ce2fe44949a571faa824d532
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks:
+      wan:
+        ipv4_address: 172.29.62.2
+    volumes:
+      - ./fixture.yaml:/etc/fixture.yaml:ro
+    command: [-f, /etc/fixture.yaml]
+networks:
+  wan:
+    ipam:
+      config: [{subnet: 172.29.62.0/28}]

@@ -1,0 +1,140 @@
+name: hk-mainland
+
+x-proxy-image: &proxy-image metacubex/mihomo:v1.19.34@sha256:4c2495d705f152897a58eac410350f243835fd01ce2fe44949a571faa824d532
+x-ipv4-only: &ipv4-only
+  net.ipv6.conf.all.disable_ipv6: '1'
+  net.ipv6.conf.default.disable_ipv6: '1'
+
+services:
+  mihomo:
+    image: *proxy-image
+    cap_drop: [ALL]
+    cap_add: [NET_ADMIN, NET_RAW]
+    security_opt: [no-new-privileges:true]
+    sysctls: *ipv4-only
+    networks:
+      tunnel-link:
+        ipv4_address: 172.29.61.2
+      wan:
+        gw_priority: 1
+    environment:
+      PEER_IP: '${UPSTREAM_IP:?Set UPSTREAM_IP in the local .env}'
+      PEER_PORT: '${UPSTREAM_PORT:?Set UPSTREAM_PORT in the local .env}'
+    volumes:
+      - type: bind
+        source: ${MIHOMO_CONFIG:-./upstream.local.yaml}
+        target: /etc/mihomo-in.yaml
+        read_only: true
+        bind: {create_host_path: false}
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        iptables -w -P OUTPUT DROP
+        iptables -w -P INPUT DROP
+        iptables -w -P FORWARD DROP
+        case "$$PEER_IP" in ''|*[!0-9.]*) exit 2 ;; esac
+        case "$$PEER_PORT" in ''|*[!0-9]*) exit 2 ;; esac
+        if ! test "$$PEER_PORT" -ge 1 || ! test "$$PEER_PORT" -le 65535; then exit 2; fi
+        iptables -w -A INPUT -m conntrack --ctstate ESTABLISHED -j ACCEPT
+        iptables -w -A INPUT -s 172.29.61.3/32 -d 172.29.61.2/32 -p tcp --dport 7890 -j ACCEPT
+        iptables -w -A OUTPUT -s 172.29.61.2/32 -d 172.29.61.3/32 -p tcp --sport 7890 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+        iptables -w -A OUTPUT -d "$$PEER_IP/32" -p tcp --dport "$$PEER_PORT" -j ACCEPT
+        exec /mihomo -f /etc/mihomo-in.yaml
+    healthcheck:
+      test: [CMD-SHELL, "pidof mihomo >/dev/null && iptables -S OUTPUT | grep -Fxq -- '-P OUTPUT DROP'"]
+      interval: 2s
+      timeout: 2s
+      retries: 12
+
+  tailscale:
+    image: tailscale/tailscale:v1.104.7@sha256:72c1e19e0aedca96b8533bbb0b4368564410ff20b17e53b804eb6c1f04a31be4
+    cap_add: [NET_ADMIN]
+    devices: [/dev/net/tun:/dev/net/tun]
+    security_opt: [no-new-privileges:true]
+    sysctls: *ipv4-only
+    depends_on:
+      mihomo: {condition: service_healthy}
+    networks:
+      tunnel-link:
+        ipv4_address: 172.29.61.3
+    environment:
+      HTTP_PROXY: http://172.29.61.2:7890
+      HTTPS_PROXY: http://172.29.61.2:7890
+      NO_PROXY: ''
+      http_proxy: ''
+      https_proxy: ''
+      no_proxy: ''
+      ALL_PROXY: ''
+      all_proxy: ''
+    volumes:
+      - node-state:/var/lib/tailscale
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        iptables -w -P OUTPUT DROP
+        iptables -w -P FORWARD DROP
+        # Do not allow a root process to fall through to the bridge or Docker DNS.
+        iptables -w -A OUTPUT -d 172.29.61.2/32 -p tcp --dport 7890 -m owner --uid-owner 0 -j ACCEPT
+        iptables -w -A OUTPUT -o lo -d 127.0.0.1/32 -j ACCEPT
+        # Exclude tailnet peers, advertised private subnets and link-local services from application egress.
+        for dst in 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 169.254.0.0/16 172.16.0.0/12 192.168.0.0/16; do
+          iptables -w -A OUTPUT -o tailscale0 -d "$$dst" -j DROP
+        done
+        iptables -w -A OUTPUT -o tailscale0 -j ACCEPT
+        exec tailscaled --tun=tailscale0 --statedir=/var/lib/tailscale
+    healthcheck:
+      test: [CMD-SHELL, "test -S /var/run/tailscale/tailscaled.sock && iptables -S OUTPUT | grep -Fxq -- '-P OUTPUT DROP'"]
+      interval: 2s
+      timeout: 2s
+      retries: 12
+
+  probe:
+    profiles: [verify]
+    image: hk-browser-session-browser:latest
+    network_mode: service:tailscale
+    depends_on:
+      tailscale: {condition: service_healthy}
+    user: '1000:1000'
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      HTTP_PROXY: ''
+      HTTPS_PROXY: ''
+      ALL_PROXY: ''
+      http_proxy: ''
+      https_proxy: ''
+      all_proxy: ''
+    volumes:
+      - type: bind
+        source: ../hk-tailscale/resolv.conf
+        target: /etc/resolv.conf
+        read_only: true
+        bind: {create_host_path: false}
+    command: [sleep, infinity]
+
+  desktop:
+    profiles: [desktop]
+    extends:
+      file: ../hk-tailscale/desktop/compose.browser.yaml
+      service: browser
+    build: !reset null
+    image: hk-browser-session-browser:latest
+    network_mode: service:tailscale
+    depends_on:
+      tailscale: {condition: service_healthy}
+    security_opt: !override
+      - no-new-privileges:true
+      - seccomp:../hk-tailscale/desktop/seccomp_profile.json
+
+networks:
+  tunnel-link:
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.gateway_mode_ipv4: isolated
+    ipam:
+      config: [{subnet: 172.29.61.0/28}]
+  wan: {}
+
+volumes:
+  node-state:
+  workspace:

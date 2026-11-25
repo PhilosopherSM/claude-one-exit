@@ -1,0 +1,17 @@
+services:
+  browser:
+    volumes:
+      - claude-profile:/home/node/.config/Claude
+      - type: volume
+        source: claude-code-home
+        target: /home/node/.claude
+        volume:
+          nocopy: true
+
+volumes:
+  claude-profile:
+    external: true
+    name: hk-browser-session_claude-profile
+  claude-code-home:
+    external: true
+    name: hk-browser-session_claude-code-home

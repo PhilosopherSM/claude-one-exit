@@ -1,0 +1,8 @@
+services:
+  browser:
+    volumes:
+      - type: bind
+        source: ${WORKBENCH_EXPORT_DIR:-/mnt/d/DockerCopy}
+        target: /export
+        bind:
+          create_host_path: false

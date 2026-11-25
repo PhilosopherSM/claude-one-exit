@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "/home/node",
+      "/workspace",
+      "/export",
+      "/tmp",
+      "/var/tmp",
+      "/opt",
+      "/usr/local"
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+port: 7890
+bind-address: 172.29.62.2
+allow-lan: true
+ipv6: false
+mode: rule
+log-level: info
+rules:
+  - DOMAIN-SUFFIX,tailscale.com,DIRECT
+  - MATCH,REJECT

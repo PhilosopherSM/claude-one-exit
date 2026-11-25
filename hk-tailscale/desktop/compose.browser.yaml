@@ -1,0 +1,49 @@
+name: hk-browser-session
+
+services:
+  browser:
+    build:
+      context: .
+      dockerfile: Dockerfile.browser
+    network_mode: container:hk-tailscale-tailscale-1
+    user: '1000:1000'
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:./seccomp_profile.json
+    init: true
+    shm_size: 512m
+    working_dir: /workspace
+    tmpfs:
+      - /home/node:uid=1000,gid=1000,mode=0700,size=1g
+    command: [dbus-daemon, --session, --address=unix:path=/run/desktop/session-bus, --nofork]
+    environment:
+      BROWSER: /usr/bin/firefox-esr
+      DBUS_SESSION_BUS_ADDRESS: unix:path=/run/desktop/session-bus
+      MOZ_ENABLE_WAYLAND: '1'
+      XDG_SESSION_TYPE: wayland
+      XDG_RUNTIME_DIR: /run/desktop
+      WAYLAND_DISPLAY: /display/wayland-0
+      HTTP_PROXY: ''
+      HTTPS_PROXY: ''
+      ALL_PROXY: ''
+      http_proxy: ''
+      https_proxy: ''
+      all_proxy: ''
+    volumes:
+      - workspace:/workspace
+      - type: bind
+        source: /mnt/wslg/runtime-dir/wayland-0
+        target: /display/wayland-0
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ../resolv.conf
+        target: /etc/resolv.conf
+        read_only: true
+        bind:
+          create_host_path: false
+
+volumes:
+  workspace:

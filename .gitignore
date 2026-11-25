@@ -1,0 +1,12 @@
+.env
+*.local
+*.local.yaml
+*.vhd
+*.vhdx
+*.tar
+*.tar.gz
+*.pem
+*.key
+*.log
+.claude/
+__pycache__/

@@ -1,0 +1,5 @@
+#!/bin/sh
+export LANG=C.UTF-8 LANGUAGE=en_US:en TZ=America/Chicago
+export LIBGL_ALWAYS_SOFTWARE=1
+unset WAYLAND_DISPLAY WAYLAND_SOCKET
+exec /usr/bin/gnome-session.distrib --disable-acceleration-check "$@"

@@ -1,0 +1,11 @@
+services:
+  browser:
+    environment:
+      GTK_IM_MODULE: wayland
+      WAYLAND_DISPLAY: /display/gnome/wayland
+    volumes:
+      - type: bind
+        source: ${GNOME_WAYLAND_DIR:?Select the nested GNOME Wayland directory}
+        target: /display/gnome
+        read_only: true
+        bind: {create_host_path: false}

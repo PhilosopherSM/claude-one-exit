@@ -1,0 +1,11 @@
+* text=auto
+*.sh text eol=lf
+*.desktop text eol=lf
+Dockerfile* text eol=lf
+*.patch -text
+*.yaml text eol=lf
+gnome-wslg/Xorg-wslg-fullscreen text eol=lf
+gnome-wslg/gnome-session-wslg text eol=lf
+gnome-wslg/wslg-x11-directory text eol=lf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

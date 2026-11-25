@@ -1,0 +1,19 @@
+#!/bin/bash
+set -euo pipefail
+
+args=()
+for arg in "$@"; do
+    case "$arg" in
+        vt[0-9]*|-keeptty|-novtswitch) ;;
+        *) args+=("$arg") ;;
+    esac
+done
+
+export WAYLAND_DISPLAY=/mnt/wslg/runtime-dir/wayland-0
+test -S "$WAYLAND_DISPLAY"
+for display in {1..99}; do
+    if [[ ! -e /tmp/.X11-unix/X$display && ! -e /tmp/.X${display}-lock ]]; then
+        exec /usr/bin/Xwayland ":$display" -geometry 1920x1200 -fullscreen -shm "${args[@]}"
+    fi
+done
+exit 1

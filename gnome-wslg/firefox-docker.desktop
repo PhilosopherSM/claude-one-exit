@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Firefox (Docker)
+Comment=Open Firefox in the existing Docker session
+Exec=/usr/bin/bash /mnt/c/src/wslg-docker-workbench/gnome-wslg/Open-Docker-App.sh firefox
+Icon=firefox-docker
+Terminal=false
+Categories=Network;WebBrowser;

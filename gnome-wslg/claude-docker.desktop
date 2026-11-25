@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Claude (Docker)
+Comment=Open Claude in the existing Docker session
+Exec=/usr/bin/bash /mnt/c/src/wslg-docker-workbench/gnome-wslg/Open-Docker-App.sh claude
+Icon=claude-docker
+Terminal=false
+Categories=Utility;

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Ubuntu (WSLg GPU)
+Comment=Ubuntu GNOME on Xwayland with the WSL D3D12 renderer
+Exec=/usr/bin/env -u WAYLAND_DISPLAY -u WAYLAND_SOCKET LANG=C.UTF-8 LANGUAGE=en_US:en TZ=America/Chicago GNOME_SHELL_SESSION_MODE=ubuntu LIBGL_ALWAYS_SOFTWARE=0 GALLIUM_DRIVER=d3d12 /usr/bin/gnome-session.distrib --session=ubuntu
+TryExec=/usr/bin/gnome-session.distrib
+Type=Application
+DesktopNames=ubuntu;GNOME;
+X-GDM-SessionRegisters=true
+X-GDM-CanRunHeadless=true

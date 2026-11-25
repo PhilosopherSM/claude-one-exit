@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Claude for Linux (container)
+Exec=claude-desktop --ozone-platform=wayland --disable-setuid-sandbox %U
+MimeType=x-scheme-handler/claude;
+NoDisplay=true

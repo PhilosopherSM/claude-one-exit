@@ -1,0 +1,15 @@
+services:
+  browser:
+    tmpfs: !override
+      - /run/desktop:uid=1000,gid=1000,mode=0700,size=64m
+    volumes:
+      - type: volume
+        source: browser-home
+        target: /home/node
+        volume:
+          nocopy: true
+
+volumes:
+  browser-home:
+    external: true
+    name: hk-browser-session_browser-home

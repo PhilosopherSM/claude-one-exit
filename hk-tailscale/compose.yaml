@@ -1,0 +1,71 @@
+name: hk-tailscale
+
+services:
+  tailscale:
+    image: tailscale/tailscale:v1.104.7@sha256:72c1e19e0aedca96b8533bbb0b4368564410ff20b17e53b804eb6c1f04a31be4
+    cap_add: [NET_ADMIN]
+    devices: [/dev/net/tun:/dev/net/tun]
+    security_opt: [no-new-privileges:true]
+    sysctls:
+      net.ipv6.conf.all.disable_ipv6: '1'
+      net.ipv6.conf.default.disable_ipv6: '1'
+    volumes:
+      - node-state:/var/lib/tailscale
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        # Lock the namespace before the workspace is allowed to join it.
+        iptables -w -P OUTPUT DROP
+        iptables -w -C OUTPUT -m owner --uid-owner 0 -j ACCEPT 2>/dev/null ||
+          iptables -w -A OUTPUT -m owner --uid-owner 0 -j ACCEPT
+        iptables -w -C OUTPUT -o tailscale0 -j ACCEPT 2>/dev/null ||
+          iptables -w -A OUTPUT -o tailscale0 -j ACCEPT
+        iptables -w -C OUTPUT -o lo -d 127.0.0.1/32 -j ACCEPT 2>/dev/null ||
+          iptables -w -A OUTPUT -o lo -d 127.0.0.1/32 -j ACCEPT
+        exec tailscaled --tun=tailscale0 --statedir=/var/lib/tailscale
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          test -S /var/run/tailscale/tailscaled.sock &&
+          iptables -S OUTPUT | grep -Fxq -- '-P OUTPUT DROP' &&
+          test "$$(cat /proc/sys/net/ipv6/conf/all/disable_ipv6)" = 1
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  workspace:
+    build:
+      context: .
+      dockerfile: Dockerfile.workspace
+    user: '1000:1000'
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    network_mode: service:tailscale
+    depends_on:
+      tailscale:
+        condition: service_healthy
+    working_dir: /home/node
+    volumes:
+      - workspace-home:/home/node
+      - type: bind
+        source: ./resolv.conf
+        target: /etc/resolv.conf
+        read_only: true
+        bind:
+          create_host_path: false
+    environment:
+      HTTP_PROXY: ''
+      HTTPS_PROXY: ''
+      ALL_PROXY: ''
+      http_proxy: ''
+      https_proxy: ''
+      all_proxy: ''
+    command: [sleep, infinity]
+
+volumes:
+  node-state:
+  workspace-home:
+    external: true
+    name: hk-tailscale_workspace-home

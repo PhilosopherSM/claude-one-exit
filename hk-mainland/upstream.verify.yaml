@@ -1,0 +1,14 @@
+port: 7890
+bind-address: 172.29.61.2
+allow-lan: true
+ipv6: false
+mode: rule
+log-level: info
+proxies:
+  - name: UPSTREAM
+    type: http
+    server: 172.29.62.2
+    port: 7890
+rules:
+  - DOMAIN-SUFFIX,tailscale.com,UPSTREAM
+  - MATCH,REJECT
