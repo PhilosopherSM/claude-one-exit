@@ -1,16 +1,22 @@
-FROM hk-desktop-pilot-desktop:latest
+FROM node:22-bookworm-slim@sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee
 
 USER root
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends firefox-esr \
-    && rm -rf /var/lib/apt/lists/*
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends fonts-noto-cjk \
-    && rm -rf /var/lib/apt/lists/*
+ARG WORKBENCH_PACKAGES="claude-desktop firefox-esr thunar fonts-noto-cjk"
+RUN set -eu; set -f; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates curl dbus fonts-liberation; \
+    case " $WORKBENCH_PACKAGES " in *" claude-desktop "*) \
+        apt-get install -y --no-install-recommends gpg; \
+        key=/usr/share/keyrings/claude-desktop-archive-keyring.asc; \
+        curl -fsSL -o "$key" https://downloads.claude.ai/claude-desktop/key.asc; \
+        gpg --batch --show-keys --with-colons "$key" | awk -F: '$1=="pub"{n++} $1=="fpr" && $10=="31DDDE24DDFAB679F42D7BD2BAA929FF1A7ECACE"{ok=1} END{exit !(n==1 && ok)}'; \
+        echo "deb [signed-by=$key] https://downloads.claude.ai/claude-desktop/apt/stable stable main" > /etc/apt/sources.list.d/claude-desktop.list; \
+        apt-get update;; \
+    esac; \
+    if [ -n "$WORKBENCH_PACKAGES" ]; then apt-get install -y --no-install-recommends -- $WORKBENCH_PACKAGES; fi; \
+    rm -rf /var/lib/apt/lists/*; \
+    install -d -m 0700 -o node -g node /run/desktop
 COPY auth-mimeapps.list /etc/xdg/mimeapps.list
 COPY claude-container.desktop /usr/share/applications/claude-container.desktop
 RUN install -d -m 0755 -o node -g node /workspace
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends thunar \
-    && rm -rf /var/lib/apt/lists/*
 USER node

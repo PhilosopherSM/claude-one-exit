@@ -5,16 +5,18 @@ app=${1:?Specify claude, firefox, terminal, files or prepare}
 case "$app" in
     claude) command=(claude-desktop --ozone-platform=wayland --disable-setuid-sandbox) ;;
     firefox) command=(firefox-esr --new-window about:blank) ;;
-    files) command=(thunar /workspace) ;;
+    files) command=(thunar .) ;;
     terminal|prepare) ;;
     *) exit 2 ;;
 esac
 check=false
 wslg=false
+start_args=()
 for option in "${@:2}"; do
     case "$option" in
         --check) check=true ;;
         --wslg) wslg=true ;;
+        --apply) [[ "$app" == prepare ]] || exit 2; start_args=(--apply) ;;
         *) printf 'Unknown option: %s\n' "$option" >&2; exit 2 ;;
     esac
 done
@@ -72,7 +74,7 @@ for attempt in {1..12}; do
     sleep 2
 done
 
-bash "$base/desktop/Start-Browser.sh"
+bash "$base/desktop/Start-Browser.sh" "${start_args[@]}"
 gateway_ns=$(docker exec "$gateway" readlink /proc/self/ns/net)
 browser_ns=$(docker exec "$browser" readlink /proc/self/ns/net)
 test -n "$gateway_ns" && test "$gateway_ns" = "$browser_ns"
@@ -94,12 +96,13 @@ elif [ "$app" = claude ] && [ "$(docker exec "$browser" printenv WAYLAND_DISPLAY
     command+=(--enable-wayland-ime --wayland-text-input-version=3)
 fi
 
-if [ "$app" = files ]; then
-    docker exec "$browser" test -x /usr/bin/thunar
+if [[ "$app" != terminal && "$app" != prepare ]]; then
+    docker exec "$browser" sh -ec 'command -v "$1" >/dev/null' sh "${command[0]}" ||
+        { printf '%s is missing. Add its package in workbench.local.toml and rerun Setup.cmd.\n' "${command[0]}" >&2; exit 1; }
 fi
 if "$check" || [ "$app" = prepare ]; then exit 0; fi
 if [ "$app" = terminal ]; then
-    docker exec -it -w /workspace "$browser" /bin/bash
+    docker exec -it "$browser" /bin/bash
     exit
 fi
 if [ "$app" = firefox ]; then

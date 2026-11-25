@@ -12,7 +12,12 @@ for pair in 'hk-tailscale-tailscale-1 hk-tailscale' 'hk-browser-session-browser-
         [[ "$previous" == "$root/$directory" ]] || { echo "Existing $container belongs to $previous. Use that installation or plan a migration."; exit 1; }
     fi
 done
+bash hk-tailscale/desktop/Start-Browser.sh --check
 if [[ ${1:-} == --check ]]; then exit 0; fi
+if docker container inspect hk-browser-session-browser-1 >/dev/null 2>&1; then
+    read -rp 'Setup may recreate the app container. Save work and quit apps first. Continue [y/N]? ' consent
+    [[ "$consent" == [Yy] ]] || exit 1
+fi
 if ! command -v wl-copy >/dev/null; then
     sudo apt-get update
     sudo apt-get install -y wl-clipboard
@@ -43,8 +48,7 @@ if [[ ! -s hk-tailscale/exit-node.local ]]; then
 else
     "${gateway[@]}" exec -T tailscale tailscale set --exit-node="$(cat hk-tailscale/exit-node.local)"
 fi
-docker compose -f hk-tailscale/desktop/compose.yaml build desktop
-docker compose -f hk-tailscale/desktop/compose.browser.yaml build browser
+bash hk-tailscale/desktop/Start-Browser.sh --build
 bash hk-tailscale/desktop/Init-New-Volumes.sh
-bash gnome-wslg/Open-Docker-App.sh prepare --check
-printf 'Windows shared folder: %s\n' "$(wslpath -w "$(cat hk-tailscale/export-dir.local)")"
+bash gnome-wslg/Open-Docker-App.sh prepare --check --apply
+python3 profile.py --list

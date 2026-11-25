@@ -1,4 +1,5 @@
 .env
+workbench.local.toml
 *.local
 *.local.yaml
 *.vhd

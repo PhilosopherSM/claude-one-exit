@@ -1,0 +1,15 @@
+# 复制为 workbench.local.toml，再运行 Setup.cmd。路径使用单引号。
+# packages 是完整的软件清单。Node、curl、D-Bus 和证书属于基础运行环境。
+packages = ["claude-desktop", "firefox-esr", "thunar", "fonts-noto-cjk", "git", "python3-venv"]
+workdir = "/workspace"
+
+# 取消下面示例的注释即可共享已有目录。指定 shares 后，它会替代默认 /export。
+# [[shares]]
+# windows = 'D:\Research'
+# container = "/projects/research"
+# read_only = false
+
+# [[shares]]
+# windows = 'D:\Datasets'
+# container = "/data/reference"
+# read_only = true

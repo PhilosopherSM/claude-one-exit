@@ -18,22 +18,35 @@ install_entry() {
     install -m "$mode" "$source" "$target"
 }
 
+container=hk-browser-session-browser-1
+docker inspect -f '{{.State.Running}}' "$container" | grep -qx true
 for app in claude firefox terminal files; do
     entry=$app-docker.desktop
+    case "$app" in
+        claude) exe=claude-desktop ;;
+        firefox) exe=firefox-esr ;;
+        files) exe=thunar ;;
+        terminal) exe=bash ;;
+    esac
+    if ! docker exec "$container" sh -c 'command -v "$1" >/dev/null' sh "$exe"; then
+        for path in "$data/applications/$entry" "$desktop/$entry"; do
+            if [[ -f "$path" && ! -L "$path" ]] && cmp -s "$base/$entry" "$path"; then unlink "$path"; fi
+        done
+        continue
+    fi
     desktop-file-validate "$base/$entry"
     install_entry "$base/$entry" "$data/applications/$entry" 0644
     install_entry "$base/$entry" "$desktop/$entry" 0755
     gio set -t string "$desktop/$entry" metadata::trusted true
 done
 
-container=hk-browser-session-browser-1
 icon_src=/usr/share/icons/hicolor/128x128/apps
 icon_dst=$data/icons/hicolor/128x128/apps
-if [ ! -e "$icon_dst/claude-docker.png" ]; then
+if [ ! -e "$icon_dst/claude-docker.png" ] && docker exec "$container" test -f "$icon_src/claude-desktop.png"; then
     docker cp "$container:$icon_src/claude-desktop.png" "$icon_dst/claude-docker.png"
 fi
-if [ ! -e "$icon_dst/firefox-docker.png" ]; then
+if [ ! -e "$icon_dst/firefox-docker.png" ] && docker exec "$container" test -f "$icon_src/firefox-esr.png"; then
     docker cp "$container:$icon_src/firefox-esr.png" "$icon_dst/firefox-docker.png"
 fi
 
-gio info -a metadata::trusted "$desktop/claude-docker.desktop" "$desktop/firefox-docker.desktop" "$desktop/terminal-docker.desktop" "$desktop/files-docker.desktop"
+gio info -a metadata::trusted "$desktop/terminal-docker.desktop"

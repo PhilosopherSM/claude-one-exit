@@ -35,6 +35,15 @@ foreach ($name in $apps.Keys) {
     $link = $links.CreateShortcut($file)
     $matchesNew = $link.TargetPath -eq $target -and $link.Arguments -eq $arguments
     $matchesLegacy = $link.TargetPath -eq $wsl -and $link.Arguments -eq $legacyArguments
+    if ($name -ne 'Terminal') {
+        $exe = if ($name -eq 'Firefox') { 'firefox-esr' } else { 'claude-desktop' }
+        & docker.exe --context desktop-linux exec hk-browser-session-browser-1 sh -c 'command -v $1 >/dev/null || exit 42' sh $exe
+        if ($LASTEXITCODE -eq 42) {
+            if ((Test-Path -LiteralPath $file) -and ($matchesNew -or $matchesLegacy)) { Remove-Item -LiteralPath $file }
+            continue
+        }
+        if ($LASTEXITCODE -ne 0) { throw "Cannot inspect installed applications." }
+    }
     if ((Test-Path -LiteralPath $file) -and -not ($matchesNew -or $matchesLegacy)) {
         throw "Existing shortcut was not overwritten: $file"
     }

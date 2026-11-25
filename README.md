@@ -16,4 +16,8 @@
 2. 解压或克隆到固定目录，双击 **[Setup.cmd](Setup.cmd)**。按提示登录 Tailscale，从列表选择自己的出口。
 3. 把仓库放入安装结束时显示的共享目录。打开开始菜单里的 **Claude (Docker)**，在 Code 页选择容器中的 `/export/项目名`，即可让 Claude 处理这个仓库。
 
-[部署与排错](docs/setup.md) · [数据与网络](docs/standards.md) · [可选 GNOME 桌面](docs/display.md)
+## 自定义
+
+安装前把 [workbench.example.toml](workbench.example.toml) 复制为 `workbench.local.toml`。用 `packages` 选择应用和开发工具，用 `[[shares]]` 将任意已有 Windows 项目目录绑定到容器，并用 `read_only` 控制写入权限。例如可以让 Claude 修改 `D:\Research`，同时只读访问 `D:\Datasets`。修改配置后重新运行 `Setup.cmd`。
+
+[配置方法与排错](docs/setup.md) · [数据与网络](docs/standards.md) · [可选 GNOME 桌面](docs/display.md)

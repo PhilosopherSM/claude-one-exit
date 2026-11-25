@@ -4,6 +4,17 @@
 
 ## 首次配置
 
+双击仓库根目录的 `Setup.cmd` 使用默认组合。需要个人配置时，在首次运行前复制并编辑 `workbench.example.toml` 为 `workbench.local.toml`。此文件由 Git 忽略。
+
+| 配置 | 行为 |
+| --- | --- |
+| `packages` | 填 Debian 软件包名列表，替代整套默认可选软件。例如只要浏览器、Git 和 Python 可填 `["firefox-esr", "git", "python3-venv"]`。Node、证书、curl 和会话总线属于基础运行环境。 |
+| `[[shares]]` | 每组填写现有 Windows 文件夹、容器绝对路径和可选的 `read_only = true`。支持空格及中文路径。目标可使用 `/export`、`/data`、`/projects`、`/mnt` 或它们的子目录，也可使用 `/workspace` 下的子目录。 |
+| `shares = []` | 仅使用容器持久卷。省略 shares 时使用默认 Windows 共享目录；定义 shares 时只绑定清单中的 Windows 项目目录。 |
+| `workdir` | 终端和文件管理器的起始位置。可选 `/workspace`、`/home/node` 或某个已配置的共享目标。 |
+
+从 Ubuntu 的仓库根目录运行 `bash hk-tailscale/desktop/Start-Browser.sh --config` 可预览最终配置。共享目录改名或移位置后需要更新 TOML。重新运行安装器会请求确认，再更新镜像和应用容器。主目录与项目卷继续使用；要保留的系统软件应列入 packages。日常快捷方式仍然复用容器。
+
 先在 Windows 创建 `D:\DockerCopy`。在 Ubuntu 的仓库根目录运行以下命令。首次 Tailscale 登录由使用者自行完成。
 
 ```bash
@@ -14,8 +25,7 @@ docker compose -f hk-tailscale/compose.yaml exec tailscale tailscale exit-node l
 read -rp 'Expected exit node Tailscale IPv4: ' node_ip
 printf '%s\n' "$node_ip" > hk-tailscale/exit-node.local
 docker compose -f hk-tailscale/compose.yaml exec tailscale tailscale set --exit-node="$node_ip"
-docker compose -f hk-tailscale/desktop/compose.yaml build desktop
-docker compose -f hk-tailscale/desktop/compose.browser.yaml build browser
+bash hk-tailscale/desktop/Start-Browser.sh --build
 ```
 
 以下步骤仅用于全新的浏览器卷。由普通用户拥有的 `.config` 必须在 Docker 建立嵌套挂载前存在，否则 Firefox 首次启动可能提示 Profile Missing。已有卷应先备份，并按 [运行标准](standards.md) 核对。
