@@ -21,6 +21,8 @@ Edit a repository in your Windows editor, ask Claude Code to run tests against t
 
 ## Desktop fixes
 
+- **Windows IME punctuation.** The optional WSLg input bridge can forward punctuation typed directly in a Claude draft, including multi-character commits such as `……`. [Patch, build notes and test status](docs/display.md#windows-ime)
+
 - **Clicks on small controls at 200% scale.** A WSLg cursor hotspot bug made the magnifier appear to point at an attachment's close button while the click landed beside it. The optional Weston patch applies the same coordinate transform to the hotspot and its image. On the reference display, a target at pixel (12,15) registered at (6,8) before the fix and at (12,15) afterwards. The arrow and magnifier were checked separately. [Patch and verification](docs/display.md)
 - **Pasting Windows screenshots.** The Windows launcher bridges clipboard images to WSLg as PNG so you can keep your usual screenshot shortcut and paste in Claude. [Clipboard bridge](gnome-wslg/Bridge-Claude-Screenshot.ps1)
 - **Reopening conversations after a restart.** The container persists both the Desktop session index and the Code transcript files it points to. A test conversation retained its messages after the app container was recreated. [Storage layout](docs/standards.md)

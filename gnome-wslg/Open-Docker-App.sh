@@ -92,6 +92,9 @@ fi
 if "$wslg" && [[ "$app" = claude || "$app" = firefox || "$app" = files ]]; then
     docker exec "$browser" test -S /display/wayland-0
     display_args=(-e WAYLAND_DISPLAY=/display/wayland-0 -e GTK_IM_MODULE=)
+    if [ "$app" = claude ]; then
+        command+=(--enable-wayland-ime --wayland-text-input-version=3)
+    fi
 elif [ "$app" = claude ] && [ "$(docker exec "$browser" printenv WAYLAND_DISPLAY)" = /display/gnome/wayland ]; then
     command+=(--enable-wayland-ime --wayland-text-input-version=3)
 fi

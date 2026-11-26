@@ -1,0 +1,63 @@
+diff --git a/WSLDVCPlugin/TextBridge.cpp b/WSLDVCPlugin/TextBridge.cpp
+index 7fe396d..19a1547 100644
+--- a/WSLDVCPlugin/TextBridge.cpp
++++ b/WSLDVCPlugin/TextBridge.cpp
+@@ -1384,6 +1384,19 @@ ITfDocumentMgr* g_appDocMgr = nullptr;
+         return true;
+     }
+ 
++    bool IsDirectPunctuation(const std::wstring& value)
++    {
++        if (value.empty())
++            return false;
++        for (wchar_t ch : value)
++        {
++            WORD type = 0;
++            if (ch < 0x80 || !GetStringTypeW(CT_CTYPE1, &ch, 1, &type) ||
++                !(type & C1_PUNCT))
++                return false;
++        }
++        return true;
++    }
+     void
+     CaptureCompositionState(bool hasComposition,
+                             const std::wstring& compositionText,
+@@ -2132,6 +2145,38 @@ ITfDocumentMgr* g_appDocMgr = nullptr;
+             }
+             en->Release();
+ 
++            // A TIP can insert punctuation directly, without opening a composition.
++            // Read only the text ranges changed in this edit session.
++            if (!hasComposition && !g_compActive && g_lastCompositionText.empty() && pEditRecord)
++            {
++                winrt::com_ptr<IEnumTfRanges> updates;
++                if (SUCCEEDED(pEditRecord->GetTextAndPropertyUpdates(
++                        TF_GTP_INCL_TEXT, nullptr, 0, updates.put())) && updates)
++                {
++                    winrt::com_ptr<ITfRange> range;
++                    ULONG updatedRanges = 0;
++                    std::wstring delta;
++                    while (updates->Next(1, range.put(), &updatedRanges) == S_OK)
++                    {
++                        wchar_t chars[64];
++                        ULONG length = 0;
++                        do
++                        {
++                            if (FAILED(range->GetText(ecReadOnly, TF_TF_MOVESTART, chars,
++                                                      ARRAYSIZE(chars), &length)))
++                                return S_OK;
++                            delta.append(chars, length);
++                            if (!delta.empty() && !IsDirectPunctuation(delta))
++                                break;
++                        } while (length == ARRAYSIZE(chars));
++                        range = nullptr;
++                        if (!delta.empty() && !IsDirectPunctuation(delta))
++                            break;
++                    }
++                    if (IsDirectPunctuation(delta))
++                        SendUpdateText(delta);
++                }
++            }
+             if (!hasComposition && !g_pendingCommitText.empty() &&
+                 changed.empty())
+             {
