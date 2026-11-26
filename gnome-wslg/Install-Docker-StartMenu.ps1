@@ -16,7 +16,7 @@ New-Item -ItemType Directory -Path $folder -Force | Out-Null
 $links = New-Object -ComObject WScript.Shell
 $apps = [ordered]@{ Claude = 'claude'; Firefox = 'firefox'; Terminal = 'terminal' }
 $cmd = Join-Path $env:SystemRoot 'System32\cmd.exe'
-$desktopLaunchers = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\hk-tailscale\desktop'))
+$desktopLaunchers = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\direct\desktop'))
 foreach ($name in $apps.Keys) {
     $file = Join-Path $folder "$name (Docker).lnk"
     $legacyArguments = '-d Ubuntu --exec /usr/bin/bash "' + $linuxPath + '" ' + $apps[$name] + ' --wslg'
@@ -35,6 +35,11 @@ foreach ($name in $apps.Keys) {
     $link = $links.CreateShortcut($file)
     $matchesNew = $link.TargetPath -eq $target -and $link.Arguments -eq $arguments
     $matchesLegacy = $link.TargetPath -eq $wsl -and $link.Arguments -eq $legacyArguments
+    if ($name -ne 'Terminal') {
+        $oldDir = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\hk-tailscale\desktop'))
+        $oldArguments = '/d /c ""' + (Join-Path $oldDir "Reopen-$name.cmd") + '""'
+        $matchesLegacy = $matchesLegacy -or ($link.TargetPath -eq $cmd -and $link.Arguments -eq $oldArguments)
+    }
     if ($name -ne 'Terminal') {
         $exe = if ($name -eq 'Firefox') { 'firefox-esr' } else { 'claude-desktop' }
         & docker.exe --context desktop-linux exec hk-browser-session-browser-1 sh -c 'command -v $1 >/dev/null || exit 42' sh $exe

@@ -7,13 +7,13 @@
 | 容器生命周期 | 启动时复用现有容器。更新镜像或强制重建会替换系统可写层 | 普通停启后容器 ID 和测试文件应保留。隔离测试中重建后卷内文件保留，系统层标记消失 |
 | 用户数据 | `/home/node` 整体持久化。`.claude` 和 `.config/Claude` 分别挂私有卷，保留 Code 正文和 Desktop 索引、身份。Firefox 配置、下载和用户级安装在主目录卷 | 用 UID 1000 检查各目录可读写。桌面恢复后打开原会话，核对原消息和回复。旧环境里只剩索引的会话可能无法恢复 |
 | 项目文件 | 应用容器有独立的 `/workspace` 卷以及 `D:\DockerCopy` ↔ `/export` 读写共享。VS Code 容器有自己的 `/home/node` 卷 | 双向写入同一个测试文件。检查 Windows ACL，尤其是共享电脑上的继承权限 |
-| 工具权限 | 用户态软件、项目和临时目录可加入本地 Code 的附加目录。可审阅 [配置模板](../hk-tailscale/desktop/claude-code/settings.json)，按需合并至用户设置 | 检查原有审批模式。Cowork 云端任务另外依赖在线设备和已授权文件夹，单独做会话写入验收 |
+| 工具权限 | 用户态软件、项目和临时目录可加入本地 Code 的附加目录。可审阅 [配置模板](../direct/desktop/claude-code/settings.json)，按需合并至用户设置 | 检查原有审批模式。Cowork 云端任务另外依赖在线设备和已授权文件夹，单独做会话写入验收 |
 | 文件浏览 | GNOME 的 Files (Docker) 在应用容器中以普通用户启动 Thunar；Terminal (Docker) 打开同一容器中的 shell | 文件管理器用 Ctrl+L 查看 `/export`，终端运行 `id` 和 `pwd` |
 | 备份与关机 | 定期备份持久卷和 Windows 项目。先保存工作并退出应用，再停止 Docker Desktop 和 WSL | `Safe-Shutdown.ps1 -CheckOnly` 可检查状态；正常执行会请求 Windows 关机。之前验证了只读预检 |
 
 ## 上游代理实验
 
-`hk-mainland/` 为独立配置。Mihomo 按配置限制上游，Tailscale 使用受限链路，探测服务与其共用命名空间。真实入口在各自忽略的 `.env` 和 `upstream.local.yaml`；仓库只含样例地址和测试网段。此目录的应用配置与主工作台的持久卷约定分别管理。
+`upstream-proxy/` 为独立配置。Mihomo 按配置限制上游，Tailscale 使用受限链路，探测服务与其共用命名空间。真实入口在各自忽略的 `.env` 和 `upstream.local.yaml`；仓库只含样例地址和测试网段。此目录的应用配置与主工作台的持久卷约定分别管理。
 
 历史隔离夹具验证过控制面握手、DERP HTTPS 可达及停掉上游时的失败行为。真实订阅在目标网络、真实已认证数据路径、切网重启和 DNS 故障仍需现场验收。仓库版本补上了可选 desktop 配置引用的 workspace 卷，仅完成 Compose 解析验证。
 

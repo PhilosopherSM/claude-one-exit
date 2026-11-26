@@ -48,7 +48,7 @@ if [ ! -w "$socket" ]; then
     exec /usr/bin/sg docker -c "$launch"
 fi
 
-base=$launcher_dir/../hk-tailscale
+base=$launcher_dir/../direct
 node_file=$base/exit-node.local
 if [[ ! -s "$node_file" ]]; then
     printf 'Configure the expected exit node in %s before launching.\n' "$node_file" >&2

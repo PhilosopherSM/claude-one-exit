@@ -8,11 +8,16 @@ Edit a repository in your Windows editor, ask Claude Code to run tests against t
 
 ## How it works
 
+| Choose your network edition | When to use it |
+| --- | --- |
+| [Outside the firewall · Direct](direct/README.md) | Tailscale can connect on your network. Use the Windows installer below. |
+| [Inside the firewall · Upstream proxy](upstream-proxy/README.md) | Tailscale needs a user-supplied upstream proxy. Start with the Mihomo configuration and verification steps for this experimental edition. |
+
 - 📁 **Share selected folders.** By default, the Windows project folder appears at `/export`. Add other folders as read-only or read/write mounts. A change to a writable shared file is a change to the Windows original.
 - 🌐 **Choose your network exit.** Claude, Firefox and the terminal share a Tailscale gateway. The launcher checks that the expected exit node is online. Firewall rules restrict public traffic from the unprivileged app user to the tunnel.
 - 💾 **Keep your work across restarts.** Named volumes hold the Linux home directory, local Claude Code conversations, the Claude Desktop profile and the workspace. Put system packages in your profile so they can be installed again when the image is rebuilt.
 
-## 🚀 First session
+## 🚀 First session with the direct edition
 
 1. **Prepare Windows.** Install Docker Desktop and an Ubuntu 24.04 WSL 2 distribution named `Ubuntu` with WSLg. Enable Ubuntu under Docker Desktop → Settings → Resources → WSL integration. Have an approved Tailscale exit node available.
 2. **Choose the regional settings.** Extract or clone the repository to a permanent folder. Copy `workbench.example.toml` to `workbench.local.toml`. Enter the exit node's IANA timezone and your preferred UTF-8 locale. For example, an English-language environment using a Chicago exit uses these top-level settings before any `[[shares]]` sections.

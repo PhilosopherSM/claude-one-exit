@@ -106,7 +106,7 @@ services:
       all_proxy: ''
     volumes:
       - type: bind
-        source: ../hk-tailscale/resolv.conf
+        source: ../direct/resolv.conf
         target: /etc/resolv.conf
         read_only: true
         bind: {create_host_path: false}
@@ -115,7 +115,7 @@ services:
   desktop:
     profiles: [desktop]
     extends:
-      file: ../hk-tailscale/desktop/compose.browser.yaml
+      file: ../direct/desktop/compose.browser.yaml
       service: browser
     build: !reset null
     image: hk-browser-session-browser:latest
@@ -124,7 +124,7 @@ services:
       tailscale: {condition: service_healthy}
     security_opt: !override
       - no-new-privileges:true
-      - seccomp:../hk-tailscale/desktop/seccomp_profile.json
+      - seccomp:../direct/desktop/seccomp_profile.json
 
 networks:
   tunnel-link:

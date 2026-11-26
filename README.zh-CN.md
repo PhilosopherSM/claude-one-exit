@@ -8,11 +8,16 @@
 
 ## 它怎样工作
 
+| 选哪个版本 | 适用情况 |
+| --- | --- |
+| [墙外版 · 无需机场](direct/README.md) | 当前网络能直接连 Tailscale，按下文双击安装。 |
+| [墙内版 · 需要机场](upstream-proxy/README.md) | 当前网络需要上游代理才能连 Tailscale，自备可用节点，按墙内版说明配置 Mihomo 并验证。此版本处于实验阶段。 |
+
 - 📁 **文件共享**　把项目放进安装器选定的 Windows 共享目录。比如 Windows 上的 `D:\DockerCopy\my-project` 在容器里就是 `/export/my-project`。Claude 的修改直接写回原文件。共享目录下的所有项目对容器可见，Windows 用户主目录和 SSH 密钥默认留在宿主机。
 - 🌐 **指定网络出口**　Claude、Firefox 和终端共用一个 Tailscale 网关。你可以选家里的 Apple TV 做出口，让浏览器授权和后续命令走同一条家宽线路。启动器会核对所选节点是否在线，检查失败就停止启动；网关防火墙限制普通应用的公网流量只能经 Tailscale 隧道发出。
 - 💾 **保留工作现场**　Docker 卷保存用户主目录、Claude Code 本地会话、Firefox 配置和工作区。重启后可以继续使用原项目和用户环境。在 Windows 上，WSLg 把 Linux 应用显示成可独立切换的窗口；完整 Ubuntu 桌面按需启用。
 
-## 🚀 第一次使用
+## 🚀 墙外版第一次使用
 
 1. **准备 Windows。** 安装 Docker Desktop 和名为 `Ubuntu` 的 Ubuntu 24.04 WSL 2 发行版，启用 WSLg。在 Docker Desktop → Settings → Resources → WSL integration 勾选 Ubuntu，并准备一台已获批准的 Tailscale 出口节点。
 2. **设置出口所在地的时区和所需语言。** 把仓库解压或克隆到固定目录，将 `workbench.example.toml` 复制为 `workbench.local.toml`。下面以芝加哥出口、美国英语为例，这两行放在第一个 `[[shares]]` 前。

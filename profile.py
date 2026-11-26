@@ -19,7 +19,7 @@ def render(config):
     if not isinstance(packages, list) or not all(isinstance(p, str) and re.fullmatch(r"[a-z0-9][a-z0-9.+-]*", p) for p in packages):
         raise ValueError("packages must be an array of Debian package names")
     workdir = config.get("workdir", "/workspace")
-    legacy = ROOT / "hk-tailscale/export-dir.local"
+    legacy = ROOT / "direct/export-dir.local"
     default_path = legacy.read_text().strip() if legacy.exists() else "/mnt/d/DockerCopy"
     shares = config.get("shares")
     volumes = []
