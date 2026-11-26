@@ -2,9 +2,9 @@
 # packages 是完整的软件清单。Node、curl、D-Bus 和证书属于基础运行环境。
 packages = ["claude-desktop", "firefox-esr", "thunar", "fonts-noto-cjk", "git", "python3-venv"]
 workdir = "/workspace"
-# 按实际出口地点及所需语言填写。美国中部示例（自动处理夏令时）：
-# timezone = "America/Chicago"
-# locale = "en_US.UTF-8"
+# 按实际出口地点及所需语言填写。以下为默认值：
+# timezone = "Etc/UTC"
+# locale = "C.UTF-8"
 
 # 取消下面示例的注释即可共享已有目录。指定 shares 后，它会替代默认 /export。
 # [[shares]]
