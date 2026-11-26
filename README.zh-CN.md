@@ -19,6 +19,12 @@
 - 🌐 **指定网络出口**　Claude、Firefox 和终端共用一个 Tailscale 网关。浏览器授权和后续命令都经过你指定的出口节点。启动器会核对所选节点是否在线，检查失败就停止启动；网关防火墙限制普通应用的公网流量只能经 Tailscale 隧道发出。
 - 💾 **保留工作现场**　Docker 卷保存用户主目录、Claude Code 本地会话、Firefox 配置和工作区。重启后可以继续使用原项目和用户环境。在 Windows 上，WSLg 把 Linux 应用显示成可独立切换的窗口；完整 Ubuntu 桌面按需启用。
 
+## 日常使用中修过的问题
+
+- **高分屏上瞄准了按钮，点击却落在旁边。** 在 200% 缩放下，附件上的放大镜尤其容易出现这个问题。可选的 Weston 补丁让点击热点跟随光标图像做同样的坐标换算。参考屏上，图形中心在像素 (12,15)，修复前 Windows 把点击点放在 (6,8)，修复后两者重合。普通箭头和放大镜也分别通过了测量。[补丁与验收记录](docs/display.md)
+- **Windows 截图粘贴。** Windows 启动器把剪贴板图片转换成 WSLg 可读取的 PNG，可以沿用 Snipaste 等工具的截图键，再到 Claude 输入框粘贴。[剪贴板桥接脚本](gnome-wslg/Bridge-Claude-Screenshot.ps1)
+- **重启后有对话标题，打开却提示找不到会话。** 容器分别持久化 Desktop 的会话索引和 Claude Code 的对话正文。重建应用容器后，已验证测试会话的原消息和回复仍可读取。[存储设计](docs/standards.md)
+
 ## 🚀 直连模式首次使用
 
 1. **准备 Windows。** 安装 Docker Desktop 和名为 `Ubuntu` 的 Ubuntu 24.04 WSL 2 发行版，启用 WSLg。在 Docker Desktop → Settings → Resources → WSL integration 勾选 Ubuntu，并准备一台已获批准的 Tailscale 出口节点。

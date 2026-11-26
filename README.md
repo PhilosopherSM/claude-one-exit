@@ -19,6 +19,12 @@ Edit a repository in your Windows editor, ask Claude Code to run tests against t
 - 🌐 **Choose your network exit.** Claude, Firefox and the terminal share a Tailscale gateway. The launcher checks that the expected exit node is online. Firewall rules restrict public traffic from the unprivileged app user to the tunnel.
 - 💾 **Keep your work across restarts.** Named volumes hold the Linux home directory, local Claude Code conversations, the Claude Desktop profile and the workspace. Put system packages in your profile so they can be installed again when the image is rebuilt.
 
+## Desktop fixes
+
+- **Clicks on small controls at 200% scale.** A WSLg cursor hotspot bug made the magnifier appear to point at an attachment's close button while the click landed beside it. The optional Weston patch applies the same coordinate transform to the hotspot and its image. On the reference display, a target at pixel (12,15) registered at (6,8) before the fix and at (12,15) afterwards. The arrow and magnifier were checked separately. [Patch and verification](docs/display.md)
+- **Pasting Windows screenshots.** The Windows launcher bridges clipboard images to WSLg as PNG so you can keep your usual screenshot shortcut and paste in Claude. [Clipboard bridge](gnome-wslg/Bridge-Claude-Screenshot.ps1)
+- **Reopening conversations after a restart.** The container persists both the Desktop session index and the Code transcript files it points to. A test conversation retained its messages after the app container was recreated. [Storage layout](docs/standards.md)
+
 ## 🚀 First session with the direct edition
 
 1. **Prepare Windows.** Install Docker Desktop and an Ubuntu 24.04 WSL 2 distribution named `Ubuntu` with WSLg. Enable Ubuntu under Docker Desktop → Settings → Resources → WSL integration. Have an approved Tailscale exit node available.
