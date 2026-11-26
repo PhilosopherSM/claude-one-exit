@@ -19,4 +19,16 @@ RUN set -eu; set -f; \
 COPY auth-mimeapps.list /etc/xdg/mimeapps.list
 COPY claude-container.desktop /usr/share/applications/claude-container.desktop
 RUN install -d -m 0755 -o node -g node /workspace
+ARG WORKBENCH_TZ=Etc/UTC
+ARG WORKBENCH_LOCALE=C.UTF-8
+RUN set -eu; apt-get update; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends locales tzdata; \
+    test -f "/usr/share/zoneinfo/$WORKBENCH_TZ"; \
+    ln -snf "/usr/share/zoneinfo/$WORKBENCH_TZ" /etc/localtime; \
+    printf '%s\n' "$WORKBENCH_TZ" > /etc/timezone; \
+    if [ "$WORKBENCH_LOCALE" != C.UTF-8 ]; then \
+        grep -Fxq "$WORKBENCH_LOCALE UTF-8" /usr/share/i18n/SUPPORTED; \
+        localedef -i "${WORKBENCH_LOCALE%.UTF-8}" -f UTF-8 "$WORKBENCH_LOCALE"; \
+    fi; \
+    rm -rf /var/lib/apt/lists/*
 USER node

@@ -12,10 +12,14 @@
 | `[[shares]]` | 每组填写现有 Windows 文件夹、容器绝对路径和可选的 `read_only = true`。支持空格及中文路径。目标可使用 `/export`、`/data`、`/projects`、`/mnt` 或它们的子目录，也可使用 `/workspace` 下的子目录。 |
 | `shares = []` | 仅使用容器持久卷。省略 shares 时使用默认 Windows 共享目录；定义 shares 时只绑定清单中的 Windows 项目目录。 |
 | `workdir` | 终端和文件管理器的起始位置。可选 `/workspace`、`/home/node` 或某个已配置的共享目标。 |
+| `timezone` | 按当前出口所在地填 IANA 时区。芝加哥用 `America/Chicago`，默认 `Etc/UTC`。日期显示和夏令时规则由 tzdata 处理。 |
+| `locale` | 应用容器的 Debian 系统语言和区域格式，如 `en_US.UTF-8`，默认 `C.UTF-8`。构建时生成 locale，启动时设置 LANG 和 LC_ALL。应用自身保存的界面语言偏好仍可能优先。 |
 
 从 Ubuntu 的仓库根目录运行 `bash hk-tailscale/desktop/Start-Browser.sh --config` 可预览最终配置。共享目录改名或移位置后需要更新 TOML。重新运行安装器会请求确认，再更新镜像和应用容器。主目录与项目卷继续使用；要保留的系统软件应列入 packages。日常快捷方式仍然复用容器。
 
-先在 Windows 创建 `D:\DockerCopy`。在 Ubuntu 的仓库根目录运行以下命令。首次 Tailscale 登录由使用者自行完成。
+更换出口时，先保存任务并退出应用，在 Ubuntu 的仓库根目录运行 `docker compose -f hk-tailscale/compose.yaml exec tailscale tailscale exit-node list`。将选中的 Tailscale IPv4 单独一行写入 `hk-tailscale/exit-node.local`，按实际位置更新 TOML 的时区和语言，再运行 `Setup.cmd`。完成后用 README 第 4 步核对。
+
+以下为手动部署顺序。先在 Windows 创建 `D:\DockerCopy`。在 Ubuntu 的仓库根目录运行以下命令。首次 Tailscale 登录由使用者自行完成。
 
 ```bash
 docker volume create hk-tailscale_workspace-home

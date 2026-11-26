@@ -5,6 +5,7 @@ import re
 import subprocess
 import sys
 import tomllib
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from pathlib import Path, PurePosixPath, PureWindowsPath
 
 ROOT = Path(__file__).resolve().parent
@@ -12,7 +13,7 @@ PACKAGES = ["claude-desktop", "firefox-esr", "thunar", "fonts-noto-cjk"]
 
 
 def render(config):
-    if config.keys() - {"packages", "workdir", "shares"}:
+    if config.keys() - {"packages", "workdir", "shares", "timezone", "locale"}:
         raise ValueError("Unknown top-level option")
     packages = config.get("packages", PACKAGES)
     if not isinstance(packages, list) or not all(isinstance(p, str) and re.fullmatch(r"[a-z0-9][a-z0-9.+-]*", p) for p in packages):
@@ -50,7 +51,17 @@ def render(config):
             volumes.append(bind(source, target, ro))
     if workdir not in {"/workspace", "/home/node", *(v["target"] for v in volumes)}:
         raise ValueError("workdir must be /workspace, /home/node or a configured mount")
-    service = {"build": {"args": {"WORKBENCH_PACKAGES": " ".join(packages)}},
+    timezone = config.get("timezone", "Etc/UTC")
+    try:
+        ZoneInfo(timezone)
+    except (ValueError, TypeError, ZoneInfoNotFoundError) as exc:
+        raise ValueError(f"Unknown IANA timezone: {timezone!r}") from exc
+    locale = config.get("locale", "C.UTF-8")
+    if not isinstance(locale, str) or not re.fullmatch(r"(?:C|[a-z]{2,3}_[A-Z]{2})\.UTF-8", locale):
+        raise ValueError("Use a UTF-8 locale such as en_US.UTF-8")
+    service = {"build": {"args": {"WORKBENCH_PACKAGES": " ".join(packages),
+                                  "WORKBENCH_TZ": timezone, "WORKBENCH_LOCALE": locale}},
+               "environment": {"TZ": timezone, "LANG": locale, "LC_ALL": locale},
                "working_dir": workdir, "volumes": volumes}
     signature = hashlib.sha256(json.dumps(service, sort_keys=True).encode()).hexdigest()
     service["labels"] = {"workbench.profile": signature}
